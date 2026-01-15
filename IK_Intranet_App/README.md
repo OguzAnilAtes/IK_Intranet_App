@@ -48,6 +48,7 @@ The home page features a live dashboard that aggregates data using LINQ queries:
 ## 📷 Screenshots
 *(Screenshots will be changed with each update.)*
 
+
 ---
 
 ## ⚙️ Installation & Setup (Local)
