@@ -1,61 +1,108 @@
 ﻿@model IEnumerable<IK_Intranet_App.Models.Gorev>
+@using IK_Intranet_App.Enums
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Görev Panosu";
 }
 
-<h1>Index</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-6 fw-bold">🚀 Görev Panosu</h1>
+    <a asp-action="Create" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-lg"></i> + Yeni Görev
+    </a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Baslik)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Aciklama)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AtananKisi)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Durum)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OlusturmaTarihi)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Baslik)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Aciklama)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AtananKisi)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Durum)
-            </td>
-            <td>
-                <td>
-                    @item.OlusturmaTarihi.AddHours(3).ToString("dd.MM.yyyy HH:mm")
-                </td>
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-light mb-3">
+            <div class="card-header bg-secondary text-white fw-bold text-center">
+                YAPILACAKLAR
+            </div>
+            <div class="card-body" style="min-height: 500px; background-color: #f8f9fa;">
+                @foreach (var item in Model.Where(x => x.Durum == Durumlar.Yapilacak))
+                {
+                    <div class="card mb-3 shadow-sm border-start border-5 border-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@item.Baslik</h5>
+                            <p class="card-text text-muted small">@item.Aciklama</p>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="badge bg-secondary">@(item.AppUser != null ? item.AppUser.AdSoyad : "Atanmamış")</span>
+                                <small class="text-muted" style="font-size: 11px;">@item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")</small>
+                            </div>
+
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">Edit</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Detay">Info</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Sil">X</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-light mb-3">
+            <div class="card-header bg-warning text-dark fw-bold text-center">
+                SÜRÜYOR
+            </div>
+            <div class="card-body" style="min-height: 500px; background-color: #fffbf0;">
+                @foreach (var item in Model.Where(x => x.Durum == Durumlar.Suruyor))
+                {
+                    <div class="card mb-3 shadow-sm border-start border-5 border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@item.Baslik</h5>
+                            <p class="card-text text-muted small">@item.Aciklama</p>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="badge bg-warning text-dark">@(item.AppUser != null ? item.AppUser.AdSoyad : "Atanmamış")</span>
+                                <small class="text-muted" style="font-size: 11px;">@item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")</small>
+                            </div>
+
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Info</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">X</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-light mb-3">
+            <div class="card-header bg-success text-white fw-bold text-center">
+                TAMAMLANDI
+            </div>
+            <div class="card-body" style="min-height: 500px; background-color: #f0fff4;">
+                @foreach (var item in Model.Where(x => x.Durum == Durumlar.Tamamlandi))
+                {
+                    <div class="card mb-3 shadow-sm border-start border-5 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-decoration-line-through text-muted">@item.Baslik</h5>
+                            <p class="card-text text-muted small">@item.Aciklama</p>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="badge bg-success">@(item.AppUser != null ? item.AppUser.AdSoyad : "Atanmamış")</span>
+                                <small class="text-muted" style="font-size: 11px;">@item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")</small>
+                            </div>
+
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Info</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">X</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

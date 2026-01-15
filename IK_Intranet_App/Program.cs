@@ -1,6 +1,7 @@
 using IK_Intranet_App.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using IK_Intranet_App.Models;
 
 // PostgreSQL'in tarih saat konusundaki kat� kural�n� esnetir
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -10,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false).AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddEntityFrameworkStores<AppDbContext>();
 
 // Razor Pages teknolojisini projeye tanıtıyoruz.
 builder.Services.AddRazorPages();

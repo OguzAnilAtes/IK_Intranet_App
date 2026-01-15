@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using IK_Intranet_App.Data;
 using IK_Intranet_App.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace IK_Intranet_App.Controllers
 {
@@ -15,16 +16,20 @@ namespace IK_Intranet_App.Controllers
     public class GorevController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager; //Kullanıcı yöneticisini tanımlıyoruz
 
-        public GorevController(AppDbContext context)
+        public GorevController(AppDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Gorev
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Gorevler.ToListAsync());
+            // Include(x => x.AppUser) sayesinde veritabanına "Join" atıyoruz.
+            var gorevler = _context.Gorevler.Include(x => x.AppUser);
+            return View(await gorevler.ToListAsync());
         }
 
         // GET: Gorev/Details/5
@@ -48,6 +53,7 @@ namespace IK_Intranet_App.Controllers
         // GET: Gorev/Create
         public IActionResult Create()
         {
+            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad"); // Value = u.Id (GUID), Text = u.AdSoyad
             return View();
         }
 
@@ -56,8 +62,10 @@ namespace IK_Intranet_App.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Baslik,Aciklama,AtananKisi,Durum")] Gorev gorev)
+        public async Task<IActionResult> Create([Bind("Id,Baslik,Aciklama,AppUserId,Durum")] Gorev gorev)
         {
+            // ModelState validasyonu için AppUser'ın zorunlu olmadığını belirtelim (Validation hatası almamak için)
+            ModelState.Remove("AppUser");
             if (ModelState.IsValid)
             {
                 gorev.OlusturmaTarihi = DateTime.UtcNow; // Tarihi biz basıyoruz
@@ -65,6 +73,8 @@ namespace IK_Intranet_App.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            // Hata olursa listeyi tekrar doldur
+            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad");
             return View(gorev);
         }
 
@@ -81,6 +91,8 @@ namespace IK_Intranet_App.Controllers
             {
                 return NotFound();
             }
+            // Düzenlerken mevcut seçili kişiyi (gorev.AppUserId) de belirtiyoruz
+            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad", gorev.AppUserId);
             return View(gorev);
         }
 
@@ -89,13 +101,14 @@ namespace IK_Intranet_App.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Baslik,Aciklama,AtananKisi,Durum,OlusturmaTarihi")] Gorev gorev)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Baslik,Aciklama,AppUserId,Durum,OlusturmaTarihi")] Gorev gorev)
         {
             if (id != gorev.Id)
             {
                 return NotFound();
             }
 
+            ModelState.Remove("AppUser"); //(Validation hatası almamak için)
             if (ModelState.IsValid)
             {
                 try
@@ -116,6 +129,7 @@ namespace IK_Intranet_App.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad", gorev.AppUserId);
             return View(gorev);
         }
 

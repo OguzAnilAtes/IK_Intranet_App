@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IK_Intranet_App.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IK_Intranet_App.Models
 {
@@ -12,9 +14,13 @@ namespace IK_Intranet_App.Models
 
         public string? Aciklama { get; set; } // Detaylar (Boş olabilir)
 
-        public string? AtananKisi { get; set; } // Kime atandı?
+        public string? AppUserId { get; set; } //İlişkinin Kimliği (Veritabanında tutulacak ID)
 
-        public string Durum { get; set; } = "Yapılacak"; // Yapılacak, Sürüyor, Bitti
+       
+        [ForeignKey("AppUserId")]
+        public ApplicationUser? AppUser { get; set; } //İlişkinin Kendisi (Kod yazarken kullanacağımız Nesne - Navigation Property)
+
+        public Durumlar Durum { get; set; } = Durumlar.Yapilacak; // Varsayılan: Yapılacak
 
         public DateTime OlusturmaTarihi { get; set; } = DateTime.UtcNow;
     }

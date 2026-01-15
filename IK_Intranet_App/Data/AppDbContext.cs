@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IK_Intranet_App.Data
 {
-    public class AppDbContext : IdentityDbContext // Bu sayede Users (Kullanıcılar), Roles (Roller) tablolarını otomatik tanıyacak.
+    // IdentityDbContext sayesinde Users (Kullanıcılar), Roles (Roller) tablolarını otomatik tanıyacak.
+    public class AppDbContext : IdentityDbContext<ApplicationUser> //Standart IdentityUser'a extra bilgiler (AdSoyad) eklemek için ApplicationUser ekledik
     {
         // Bu constructor (yapıcı metot), ayarları Program.cs'ten alır
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)

@@ -22,11 +22,11 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Aciklama)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AtananKisi)
+        <dt class="col-sm-2">
+            Atanan Personel
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AtananKisi)
+        <dd class="col-sm-10">
+            @(Model.AppUser?.AdSoyad ?? "Atanmamış Personel")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Durum)

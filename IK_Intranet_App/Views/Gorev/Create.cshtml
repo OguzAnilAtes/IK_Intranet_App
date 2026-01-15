@@ -22,14 +22,15 @@
                 <input asp-for="Aciklama" class="form-control" />
                 <span asp-validation-for="Aciklama" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="AtananKisi" class="control-label"></label>
-                <input asp-for="AtananKisi" class="form-control" />
-                <span asp-validation-for="AtananKisi" class="text-danger"></span>
+            <div class="form-group mb-3">
+                <label class="control-label fw-bold">Atanacak Personel</label>
+                <select asp-for="AppUserId" class="form-select" asp-items="ViewBag.Users">
+                    <option value="">-- Personel Seçiniz --</option>
+                </select>
             </div>
-            <div class="form-group">
-                <label asp-for="Durum" class="control-label"></label>
-                <input asp-for="Durum" class="form-control" />
+            <div class="form-group mb-3">
+                <label asp-for="Durum" class="control-label fw-bold">Görev Durumu</label>
+                <select asp-for="Durum" class="form-select" asp-items="Html.GetEnumSelectList<IK_Intranet_App.Enums.Durumlar>()"></select>
                 <span asp-validation-for="Durum" class="text-danger"></span>
             </div>
             <div class="form-group">

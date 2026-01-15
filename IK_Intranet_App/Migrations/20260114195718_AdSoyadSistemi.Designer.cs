@@ -3,6 +3,7 @@ using System;
 using IK_Intranet_App.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IK_Intranet_App.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260114195718_AdSoyadSistemi")]
+    partial class AdSoyadSistemi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -102,7 +105,7 @@ namespace IK_Intranet_App.Migrations
                     b.Property<string>("Aciklama")
                         .HasColumnType("text");
 
-                    b.Property<string>("AppUserId")
+                    b.Property<string>("AtananKisi")
                         .HasColumnType("text");
 
                     b.Property<string>("Baslik")
@@ -116,8 +119,6 @@ namespace IK_Intranet_App.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
 
                     b.ToTable("Gorevler");
                 });
@@ -256,15 +257,6 @@ namespace IK_Intranet_App.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("IK_Intranet_App.Models.Gorev", b =>
-                {
-                    b.HasOne("IK_Intranet_App.Models.ApplicationUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId");
-
-                    b.Navigation("AppUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
