@@ -86,8 +86,9 @@ The home page features a live dashboard that aggregates data using LINQ queries:
 * [x] Relational Database Refactoring (User-Task Association)
 * [x] Dynamic Dashboard
 * [x] Cloud Deployment (Render & Neon)
-* [ ] Role-Based Authorization (Admin/User)
+* [x] Role-Based Authorization (Admin/Creator Logic)
 * [ ] Email Notifications
 
 ---
 *Developed by [Oğuz Anıl ATEŞ](https://www.linkedin.com/in/oguzanilates)*
+
