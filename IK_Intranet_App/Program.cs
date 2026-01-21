@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using IK_Intranet_App.Models;
 
-// PostgreSQL'in tarih saat konusundaki kat� kural�n� esnetir
+// PostgreSQL'in tarih saat konusundaki katı kuralını esnetir
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +11,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false; // Email onayı zorunluluğunu kaldıralım (Test için)
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 3; // Şifre politikalarını gevşettik (Geliştirme kolaylığı için)
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders()
+.AddDefaultUI(); // Login/Register sayfalarının çalışması için şart
 
 // Razor Pages teknolojisini projeye tanıtıyoruz.
 builder.Services.AddRazorPages();
@@ -43,5 +53,57 @@ app.MapControllerRoute(
 
 // Razor sayfalarının adreslerini haritalıyoruz.
 app.MapRazorPages();
+
+// Rol ve Admin Oluşturma (Seeding)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+        // 1. Rolleri Tanımla
+        string[] roleNames = { "Admin", "Member" };
+        foreach (var roleName in roleNames)
+        {
+            var roleExist = await roleManager.RoleExistsAsync(roleName);
+            if (!roleExist)
+            {
+                // Rol yoksa oluştur (Veritabanına Admin ve Member rollerini ekler)
+                await roleManager.CreateAsync(new IdentityRole(roleName));
+            }
+        }
+
+        // 2. Admin Kullanıcısı Oluştur (Eğer yoksa)
+        var adminEmail = "admin@sirket.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+        if (adminUser == null)
+        {
+            var newAdmin = new ApplicationUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                AdSoyad = "Sistem Yöneticisi", // Admin'in adı
+                EmailConfirmed = true
+            };
+
+            // Şifresi: "Sau123!" (Güçlü şifre zorunluluğu var)
+            var createAdmin = await userManager.CreateAsync(newAdmin, "Sau123!");
+
+            if (createAdmin.Succeeded)
+            {
+                // Kullanıcı oluştuysa ona "Admin" rolünü ver
+                await userManager.AddToRoleAsync(newAdmin, "Admin");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Roller oluşturulurken bir hata meydana geldi.");
+    }
+}
 
 app.Run();

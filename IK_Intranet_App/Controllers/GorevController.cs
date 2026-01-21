@@ -66,8 +66,12 @@ namespace IK_Intranet_App.Controllers
         {
             // ModelState validasyonu için AppUser'ın zorunlu olmadığını belirtelim (Validation hatası almamak için)
             ModelState.Remove("AppUser");
+            ModelState.Remove("OlusturanUserId"); // Validasyona takılmasın
             if (ModelState.IsValid)
             {
+                var currentUserId = _userManager.GetUserId(User); // O an giriş yapmış kullanıcının ID'sini alıp "Oluşturan" olarak kaydediyoruz.
+                gorev.OlusturanUserId = currentUserId;
+
                 gorev.OlusturmaTarihi = DateTime.UtcNow; // Tarihi biz basıyoruz
                 _context.Add(gorev);
                 await _context.SaveChangesAsync();
@@ -91,6 +95,19 @@ namespace IK_Intranet_App.Controllers
             {
                 return NotFound();
             }
+
+            // YETKİ KONTROLÜ
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOlusturan = gorev.OlusturanUserId == currentUserId; // Oluşturan ben miyim?
+            bool isAtanan = gorev.AppUserId == currentUserId;          // Görev bana mı atanmış?
+
+            if (!isAdmin && !isOlusturan && !isAtanan) //Admin, oluşturan veya atanan değilse erişim engeli
+            {
+                return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
+                // Not: AccessDenied sayfası yoksa, otomatik olarak Login'e atabilir veya beyaz sayfa verir.
+            }
+
             // Düzenlerken mevcut seçili kişiyi (gorev.AppUserId) de belirtiyoruz
             ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad", gorev.AppUserId);
             return View(gorev);
@@ -108,11 +125,36 @@ namespace IK_Intranet_App.Controllers
                 return NotFound();
             }
 
+            // Veritabanındaki GERÇEK veriyi çek (Yetki kontrolü ve Veri kaybını önlemek için)
+            // AsNoTracking() kullanıyoruz çünkü aşağıda _context.Update(gorev) diyeceğiz.
+            // EF Core aynı ID'ye sahip iki nesneyi takip edemez, o yüzden bunu "takip etme" diyoruz.
+            var originalGorev = await _context.Gorevler.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+
+            if (originalGorev == null) return NotFound();
+
+            // YETKİ KONTROLÜ
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOlusturan = originalGorev.OlusturanUserId == currentUserId; // Orijinal veriden bakıyoruz
+            bool isAtanan = originalGorev.AppUserId == currentUserId;          // Orijinal veriden bakıyoruz
+
+            if (!isAdmin && !isOlusturan && !isAtanan)
+            {
+                return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
+            }
+
             ModelState.Remove("AppUser"); //(Validation hatası almamak için)
+            ModelState.Remove("OlusturanUserId"); //(Validation hatası almamak için)
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // 3. ADIM: Kritik verileri koru 🛡️
+                    // Formdan gelen nesnede "OlusturanUserId" ve "OlusturmaTarihi" boştur.
+                    // Onları orijinalinden alıp tekrar yerine koyuyoruz.
+                    gorev.OlusturanUserId = originalGorev.OlusturanUserId;
+                    gorev.OlusturmaTarihi = originalGorev.OlusturmaTarihi;
+
                     _context.Update(gorev);
                     await _context.SaveChangesAsync();
                 }
@@ -148,6 +190,16 @@ namespace IK_Intranet_App.Controllers
                 return NotFound();
             }
 
+            // YETKİ KONTROLÜ
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOlusturan = gorev.OlusturanUserId == currentUserId;
+
+            if (!isAdmin && !isOlusturan) //Admin veya oluşturan değilse erişim engeli
+            {
+                return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
+            }
+
             return View(gorev);
         }
 
@@ -157,6 +209,17 @@ namespace IK_Intranet_App.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var gorev = await _context.Gorevler.FindAsync(id);
+
+            // YETKİ KONTROLÜ
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOlusturan = gorev.OlusturanUserId == currentUserId;
+
+            if (!isAdmin && !isOlusturan) //Admin veya oluşturan değilse erişim engeli
+            {
+                return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
+            }
+
             if (gorev != null)
             {
                 _context.Gorevler.Remove(gorev);

@@ -1,5 +1,7 @@
 ﻿@model IEnumerable<IK_Intranet_App.Models.Gorev>
 @using IK_Intranet_App.Enums
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Görev Panosu";
@@ -21,6 +23,12 @@
             <div class="card-body" style="min-height: 500px; background-color: #f8f9fa;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Yapilacak))
                 {
+                    // Döngünün içinde her kart için yetkileri hesapla
+                    var currentUserId = UserManager.GetUserId(User);
+                    var isAdmin = User.IsInRole("Admin");
+                    var isOlusturan = item.OlusturanUserId == currentUserId;
+                    var isAtanan = item.AppUserId == currentUserId;
+
                     <div class="card mb-3 shadow-sm border-start border-5 border-secondary">
                         <div class="card-body">
                             <h5 class="card-title fw-bold">@item.Baslik</h5>
@@ -33,9 +41,15 @@
 
                             <hr class="my-2" />
                             <div class="d-flex justify-content-end gap-2">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">Edit</a>
+                                @if (isAdmin || isOlusturan || isAtanan)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">Edit</a>
+                                }
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Detay">Info</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Sil">X</a>
+                                @if (isAdmin || isOlusturan)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Sil">X</a>
+                                }
                             </div>
                         </div>
                     </div>
@@ -52,6 +66,12 @@
             <div class="card-body" style="min-height: 500px; background-color: #fffbf0;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Suruyor))
                 {
+                    // Döngünün içinde her kart için yetkileri hesapla
+                    var currentUserId = UserManager.GetUserId(User);
+                    var isAdmin = User.IsInRole("Admin");
+                    var isOlusturan = item.OlusturanUserId == currentUserId;
+                    var isAtanan = item.AppUserId == currentUserId;
+
                     <div class="card mb-3 shadow-sm border-start border-5 border-warning">
                         <div class="card-body">
                             <h5 class="card-title fw-bold">@item.Baslik</h5>
@@ -64,9 +84,15 @@
 
                             <hr class="my-2" />
                             <div class="d-flex justify-content-end gap-2">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Info</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">X</a>
+                                @if (isAdmin || isOlusturan || isAtanan)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">Edit</a>
+                                }
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Detay">Info</a>
+                                @if (isAdmin || isOlusturan)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Sil">X</a>
+                                }
                             </div>
                         </div>
                     </div>
@@ -83,6 +109,12 @@
             <div class="card-body" style="min-height: 500px; background-color: #f0fff4;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Tamamlandi))
                 {
+                    // Döngünün içinde her kart için yetkileri hesapla
+                    var currentUserId = UserManager.GetUserId(User);
+                    var isAdmin = User.IsInRole("Admin");
+                    var isOlusturan = item.OlusturanUserId == currentUserId;
+                    var isAtanan = item.AppUserId == currentUserId;
+
                     <div class="card mb-3 shadow-sm border-start border-5 border-success">
                         <div class="card-body">
                             <h5 class="card-title text-decoration-line-through text-muted">@item.Baslik</h5>
@@ -95,9 +127,15 @@
 
                             <hr class="my-2" />
                             <div class="d-flex justify-content-end gap-2">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Info</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">X</a>
+                                @if (isAdmin || isOlusturan || isAtanan)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">Edit</a>
+                                }
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Detay">Info</a>
+                                @if (isAdmin || isOlusturan)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Sil">X</a>
+                                }
                             </div>
                         </div>
                     </div>

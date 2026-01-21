@@ -16,9 +16,11 @@ namespace IK_Intranet_App.Models
 
         public string? AppUserId { get; set; } //İlişkinin Kimliği (Veritabanında tutulacak ID)
 
-       
+
         [ForeignKey("AppUserId")]
         public ApplicationUser? AppUser { get; set; } //İlişkinin Kendisi (Kod yazarken kullanacağımız Nesne - Navigation Property)
+
+        public string? OlusturanUserId { get; set; } // Bu alan "Görevin Sahibi"ni tutacak.
 
         public Durumlar Durum { get; set; } = Durumlar.Yapilacak; // Varsayılan: Yapılacak
 
