@@ -1,56 +1,77 @@
 ﻿@model IK_Intranet_App.Models.Gorev
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Görevi Düzenle";
 }
 
-<h1>Edit</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0 rounded-4">
 
-<h4>Gorev</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Baslik" class="control-label"></label>
-                <input asp-for="Baslik" class="form-control" />
-                <span asp-validation-for="Baslik" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Aciklama" class="control-label"></label>
-                <input asp-for="Aciklama" class="form-control" />
-                <span asp-validation-for="Aciklama" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label class="control-label fw-bold">Atanacak Personel</label>
-                <select asp-for="AppUserId" class="form-select" asp-items="ViewBag.Users">
-                    <option value="">-- Personel Seçiniz --</option>
-                </select>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="Durum" class="control-label fw-bold">Görev Durumu</label>
-                <select asp-for="Durum" class="form-select" asp-items="Html.GetEnumSelectList<IK_Intranet_App.Enums.Durumlar>()"></select>
-                <span asp-validation-for="Durum" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label class="control-label">Oluşturma Tarihi</label>
-                <input type="text" class="form-control" value="@Model.OlusturmaTarihi.AddHours(3).ToString("dd.MM.yyyy HH:mm")" disabled />
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h3 class="fw-bold text-primary">
+                        <i class="bi bi-pencil-square me-2"></i> Görevi Düzenle
+                    </h3>
+                    <p class="text-muted small">Görev detaylarını aşağıdan güncelleyebilirsiniz.</p>
+                </div>
 
-                <input type="hidden" asp-for="OlusturmaTarihi" />
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="OlusturmaTarihi" />
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Baslik" class="form-control rounded-3" placeholder="Görev Başlığı" />
+                            <label asp-for="Baslik" class="text-muted">Görev Başlığı</label>
+                            <span asp-validation-for="Baslik" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="Aciklama" class="form-control rounded-3" placeholder="Açıklama" style="height: 100px"></textarea>
+                            <label asp-for="Aciklama" class="text-muted">Görev Açıklaması</label>
+                            <span asp-validation-for="Aciklama" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-muted small">Atanan Personel</label>
+                                <select asp-for="AppUserId" class="form-select form-select-lg rounded-3" asp-items="ViewBag.Users">
+                                    <option value="">-- Personel Seçiniz --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Durum" class="form-label fw-bold text-muted small">Görev Durumu</label>
+                                <select asp-for="Durum" class="form-select form-select-lg rounded-3" asp-items="Html.GetEnumSelectList<IK_Intranet_App.Enums.Durumlar>()"></select>
+                                <span asp-validation-for="Durum" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small">Oluşturulma Tarihi</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-calendar-event"></i></span>
+                                <input type="text" class="form-control bg-light border-0" value="@Model.OlusturmaTarihi.AddHours(3).ToString("dd.MM.yyyy HH:mm")" disabled />
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
+                            <a asp-action="Index" class="btn btn-light rounded-pill px-4 text-muted">İptal</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm fw-bold">
+                                Değişiklikleri Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

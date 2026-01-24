@@ -1,6 +1,31 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* Tüm siteye fontu uygula */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa; /* Hafif gri arka plan (Gözü yormaz) */
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Kurumsal Mavi Degrade */
+        }
+        .btn {
+            border-radius: 8px; /* Butonları biraz yuvarlayalım */
+        }
+        .card {
+            border: none; /* Kalın siyah çizgileri kaldıralım */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Hafif gölge */
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            cursor: pointer;
+        }
+    </style>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - IK_Intranet_App</title>
@@ -10,24 +35,27 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">IK_Intranet_App</a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-building-check me-2"></i>IK Yönetim
+                </a>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                        </li>    
                         <partial name="_LoginPartial" />
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Gorev" asp-action="Index">Görev Yönetimi</a>
+                        <li class="nav-item ms-auto">
+                            <a class="nav-link btn btn-light text-primary px-3 ms-2 fw-bold" asp-area="" asp-controller="Gorev" asp-action="Index">
+                                <i class="bi bi-kanban me-1"></i> Görev Panosu
+                            </a>
                         </li>
                     </ul>
                 </div>
@@ -40,9 +68,15 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - IK_Intranet_App - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted bg-white mt-auto">
+        <div class="container-fluid text-center py-3">
+            <span class="text-dark small">
+                &copy; 2026 <strong>IK Yönetim Paneli</strong>
+                <span class="mx-2">|</span>
+                <span class="text-muted">v1.0.0</span>
+                <span class="mx-2">|</span>
+                <span>Developed with <i class="bi bi-heart-fill text-danger" style="font-size: 0.8rem;"></i> by <strong>Oğuz Anıl Ateş</strong></span>
+            </span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

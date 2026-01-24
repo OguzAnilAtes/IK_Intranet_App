@@ -1,0 +1,18 @@
+﻿@using IK_Intranet_App.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+
+<ul class="nav nav-pills flex-column gap-2">
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.IndexNavClass(ViewContext) fw-bold" id="profile" asp-page="./Index">
+            <i class="bi bi-person-lines-fill me-2"></i> Profil Bilgilerim
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext) fw-bold" id="change-password" asp-page="./ChangePassword">
+            <i class="bi bi-key-fill me-2"></i> Şifre Değiştir
+        </a>
+    </li>
+</ul>

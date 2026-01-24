@@ -41,6 +41,7 @@ namespace IK_Intranet_App.Controllers
             }
 
             var gorev = await _context.Gorevler
+                .Include(g => g.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (gorev == null)
             {
@@ -184,6 +185,7 @@ namespace IK_Intranet_App.Controllers
             }
 
             var gorev = await _context.Gorevler
+                .Include(g => g.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (gorev == null)
             {

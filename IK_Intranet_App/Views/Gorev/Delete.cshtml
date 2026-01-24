@@ -1,53 +1,66 @@
 ﻿@model IK_Intranet_App.Models.Gorev
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Görevi Sil";
 }
 
-<h1>Delete</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0 rounded-4">
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Gorev</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Baslik)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Baslik)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Aciklama)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Aciklama)
-        </dd>
-        <dt class="col-sm-2">
-            Atanan Personel
-        </dt>
-        <dd class="col-sm-10">
-            @(Model.AppUser?.AdSoyad ?? "Atanmamış Personel")
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Durum)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Durum)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OlusturmaTarihi)
-        </dt>
-        <dd class = "col-sm-10">
-        <dd class="col-sm-10">
-            @Model.OlusturmaTarihi.AddHours(3).ToString("dd.MM.yyyy HH:mm")
-        </dd>
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+                <div class="card-header bg-danger text-white border-0 pt-4 pb-3 px-4" style="border-radius: 16px 16px 0 0;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill fs-2 me-3"></i>
+                        <div>
+                            <h4 class="fw-bold mb-0">Görevi Silmek İstiyor musunuz?</h4>
+                            <p class="mb-0 small opacity-75">Bu işlem geri alınamaz!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="alert alert-light border rounded-3 mb-4">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Başlık</dt>
+                            <dd class="col-sm-8 fw-bold text-dark">@Model.Baslik</dd>
+
+                            <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Açıklama</dt>
+                            <dd class="col-sm-8 text-break">@Model.Aciklama</dd>
+
+                            <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Durum</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">@Model.Durum</span>
+                            </dd>
+
+                            <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Atanan Kişi</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.AppUser != null)
+                                {
+                                    <span class="text-primary"><i class="bi bi-person-fill"></i> @Model.AppUser.AdSoyad</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fst-italic">Atanmamış Personel</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Tarih</dt>
+                            <dd class="col-sm-8">
+                                @Model.OlusturmaTarihi.AddHours(3).ToString("dd.MM.yyyy HH:mm")
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <form asp-action="Delete" class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-4 text-muted">Vazgeç</a>
+                        <button type="submit" class="btn btn-danger rounded-pill px-5 shadow-sm fw-bold hover-effect">
+                            <i class="bi bi-trash-fill me-2"></i> Evet, Sil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
