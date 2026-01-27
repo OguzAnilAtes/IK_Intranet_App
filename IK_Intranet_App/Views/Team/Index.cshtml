@@ -1,0 +1,121 @@
+﻿@model List<IK_Intranet_App.Models.TeamMemberViewModel>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Ekibim";
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Ekibim</h2>
+            <p class="text-muted">Takımınızdaki üyeleri ve yetkilerini yönetin.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-3 shadow-sm alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-3 shadow-sm alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-muted text-uppercase small fw-bold">Kullanıcı</th>
+                            <th class="py-3 text-muted text-uppercase small fw-bold">Email</th>
+                            <th class="py-3 text-muted text-uppercase small fw-bold">Rol</th>
+                            <th class="pe-4 py-3 text-end text-muted text-uppercase small fw-bold">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var roleBadge = user.IsAdmin ? "bg-warning text-dark" : "bg-info text-white";
+
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px;">
+                                            @user.AdSoyad.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark">@user.AdSoyad</h6>
+                                            <small class="text-muted">Aktif</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="text-muted">@user.Email</span></td>
+                                <td><span class="badge rounded-pill @roleBadge">@user.Role</span></td>
+                                <td class="pe-4 text-end">
+
+                                    @if (User.IsInRole("Admin") && user.Id != currentUserId)
+                                    {
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-gear-fill text-muted"></i>
+                                            </button>
+                                            <ul class="dropdown-menu shadow border-0">
+                                                @if (user.IsAdmin)
+                                                {
+                                                    <li>
+                                                        <form asp-action="ChangeRole" method="post">
+                                                            <input type="hidden" name="userId" value="@user.Id" />
+                                                            <input type="hidden" name="newRole" value="Member" />
+                                                            <button class="dropdown-item text-warning" type="submit">
+                                                                <i class="bi bi-arrow-down-circle me-2"></i>Üyeliğe Düşür
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                }
+                                                else
+                                                {
+                                                    <li>
+                                                        <form asp-action="ChangeRole" method="post">
+                                                            <input type="hidden" name="userId" value="@user.Id" />
+                                                            <input type="hidden" name="newRole" value="Admin" />
+                                                            <button class="dropdown-item text-success" type="submit">
+                                                                <i class="bi bi-arrow-up-circle me-2"></i>Yönetici Yap
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                }
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form asp-action="Kick" asp-route-userId="@user.Id" method="post" onsubmit="return confirm('Bu kullanıcıyı takımdan çıkarmak istediğinize emin misiniz?');">
+                                                        <button class="dropdown-item text-danger" type="submit">
+                                                            <i class="bi bi-person-x-fill me-2"></i>Takımdan Çıkar
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    }
+                                    else if (user.Id == currentUserId)
+                                    {
+                                        <span class="badge bg-light text-muted border">Siz</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

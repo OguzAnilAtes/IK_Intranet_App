@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using IK_Intranet_App.Data;
+using IK_Intranet_App.Models;
+using IK_Intranet_App.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using IK_Intranet_App.Data;
-using IK_Intranet_App.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace IK_Intranet_App.Controllers
 {
@@ -16,18 +17,19 @@ namespace IK_Intranet_App.Controllers
     public class GorevController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager; //Kullanıcı yöneticisini tanımlıyoruz
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ITenantService _tenantService;
 
-        public GorevController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public GorevController(AppDbContext context, UserManager<ApplicationUser> userManager, ITenantService tenantService)
         {
             _context = context;
             _userManager = userManager;
+            _tenantService = tenantService;
         }
 
         // GET: Gorev
         public async Task<IActionResult> Index()
         {
-            // Include(x => x.AppUser) sayesinde veritabanına "Join" atıyoruz.
             var gorevler = _context.Gorevler.Include(x => x.AppUser);
             return View(await gorevler.ToListAsync());
         }
@@ -35,18 +37,13 @@ namespace IK_Intranet_App.Controllers
         // GET: Gorev/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var gorev = await _context.Gorevler
                 .Include(g => g.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (gorev == null)
-            {
-                return NotFound();
-            }
+
+            if (gorev == null) return NotFound();
 
             return View(gorev);
         }
@@ -54,81 +51,94 @@ namespace IK_Intranet_App.Controllers
         // GET: Gorev/Create
         public IActionResult Create()
         {
-            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad"); // Value = u.Id (GUID), Text = u.AdSoyad
+            // GÜNCELLEME 1: Sadece kendi takımındaki kullanıcıları listele
+            var currentTeamId = _tenantService.GetTeamId();
+            var teamUsers = _userManager.Users.Where(u => u.TeamId == currentTeamId).ToList();
+
+            ViewBag.Users = new SelectList(teamUsers, "Id", "AdSoyad");
             return View();
         }
 
         // POST: Gorev/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Baslik,Aciklama,AppUserId,Durum")] Gorev gorev)
         {
-            // ModelState validasyonu için AppUser'ın zorunlu olmadığını belirtelim (Validation hatası almamak için)
             ModelState.Remove("AppUser");
-            ModelState.Remove("OlusturanUserId"); // Validasyona takılmasın
+            ModelState.Remove("OlusturanUserId");
+
+            // 1. ADIM: Takım ID Ataması
+            var currentTeamId = _tenantService.GetTeamId();
+
+            if (currentTeamId.HasValue)
+            {
+                gorev.TeamId = currentTeamId.Value;
+            }
+            else
+            {
+                ModelState.AddModelError("", "Bir takıma ait olmadığınız için görev oluşturamazsınız.");
+            }
+
+            // 2. ADIM: Validation Temizliği
+            ModelState.Remove("Team");
+            ModelState.Remove("TeamId");
+
             if (ModelState.IsValid)
             {
-                var currentUserId = _userManager.GetUserId(User); // O an giriş yapmış kullanıcının ID'sini alıp "Oluşturan" olarak kaydediyoruz.
+                var currentUserId = _userManager.GetUserId(User);
                 gorev.OlusturanUserId = currentUserId;
+                gorev.OlusturmaTarihi = DateTime.UtcNow;
 
-                gorev.OlusturmaTarihi = DateTime.UtcNow; // Tarihi biz basıyoruz
                 _context.Add(gorev);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            // Hata olursa listeyi tekrar doldur
-            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad");
+
+            // Hata Durumu: Listeyi tekrar (Filtreli olarak) doldur
+            if (currentTeamId.HasValue)
+            {
+                var teamUsers = _userManager.Users.Where(u => u.TeamId == currentTeamId).ToList();
+                ViewBag.Users = new SelectList(teamUsers, "Id", "AdSoyad");
+            }
+
             return View(gorev);
         }
 
         // GET: Gorev/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var gorev = await _context.Gorevler.FindAsync(id);
-            if (gorev == null)
-            {
-                return NotFound();
-            }
+            if (gorev == null) return NotFound();
 
             // YETKİ KONTROLÜ
             var currentUserId = _userManager.GetUserId(User);
             bool isAdmin = User.IsInRole("Admin");
-            bool isOlusturan = gorev.OlusturanUserId == currentUserId; // Oluşturan ben miyim?
-            bool isAtanan = gorev.AppUserId == currentUserId;          // Görev bana mı atanmış?
+            bool isOlusturan = gorev.OlusturanUserId == currentUserId;
+            bool isAtanan = gorev.AppUserId == currentUserId;
 
-            if (!isAdmin && !isOlusturan && !isAtanan) //Admin, oluşturan veya atanan değilse erişim engeli
+            if (!isAdmin && !isOlusturan && !isAtanan)
             {
                 return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
-                // Not: AccessDenied sayfası yoksa, otomatik olarak Login'e atabilir veya beyaz sayfa verir.
             }
 
-            // Düzenlerken mevcut seçili kişiyi (gorev.AppUserId) de belirtiyoruz
-            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad", gorev.AppUserId);
+            // GÜNCELLEME 2: Düzenlerken de sadece takım arkadaşlarını gör
+            var currentTeamId = _tenantService.GetTeamId();
+            var teamUsers = _userManager.Users.Where(u => u.TeamId == currentTeamId).ToList();
+
+            ViewBag.Users = new SelectList(teamUsers, "Id", "AdSoyad", gorev.AppUserId);
             return View(gorev);
         }
 
         // POST: Gorev/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Baslik,Aciklama,AppUserId,Durum,OlusturmaTarihi")] Gorev gorev)
         {
-            if (id != gorev.Id)
-            {
-                return NotFound();
-            }
+            if (id != gorev.Id) return NotFound();
 
-            // Veritabanındaki GERÇEK veriyi çek (Yetki kontrolü ve Veri kaybını önlemek için)
-            // AsNoTracking() kullanıyoruz çünkü aşağıda _context.Update(gorev) diyeceğiz.
-            // EF Core aynı ID'ye sahip iki nesneyi takip edemez, o yüzden bunu "takip etme" diyoruz.
+            // Orijinal veriyi takip etmeden (AsNoTracking) çekiyoruz
             var originalGorev = await _context.Gorevler.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
 
             if (originalGorev == null) return NotFound();
@@ -136,25 +146,30 @@ namespace IK_Intranet_App.Controllers
             // YETKİ KONTROLÜ
             var currentUserId = _userManager.GetUserId(User);
             bool isAdmin = User.IsInRole("Admin");
-            bool isOlusturan = originalGorev.OlusturanUserId == currentUserId; // Orijinal veriden bakıyoruz
-            bool isAtanan = originalGorev.AppUserId == currentUserId;          // Orijinal veriden bakıyoruz
+            bool isOlusturan = originalGorev.OlusturanUserId == currentUserId;
+            bool isAtanan = originalGorev.AppUserId == currentUserId;
 
             if (!isAdmin && !isOlusturan && !isAtanan)
             {
                 return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
             }
 
-            ModelState.Remove("AppUser"); //(Validation hatası almamak için)
-            ModelState.Remove("OlusturanUserId"); //(Validation hatası almamak için)
+            // GÜNCELLEME 3: Validation Temizliği (TeamId için)
+            ModelState.Remove("AppUser");
+            ModelState.Remove("OlusturanUserId");
+            ModelState.Remove("Team");      // <-- EKLENDİ
+            ModelState.Remove("TeamId");    // <-- EKLENDİ
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     // 3. ADIM: Kritik verileri koru 🛡️
-                    // Formdan gelen nesnede "OlusturanUserId" ve "OlusturmaTarihi" boştur.
-                    // Onları orijinalinden alıp tekrar yerine koyuyoruz.
                     gorev.OlusturanUserId = originalGorev.OlusturanUserId;
                     gorev.OlusturmaTarihi = originalGorev.OlusturmaTarihi;
+
+                    // GÜNCELLEME 4: Takım bilgisini kaybetme!
+                    gorev.TeamId = originalGorev.TeamId;
 
                     _context.Update(gorev);
                     await _context.SaveChangesAsync();
@@ -172,32 +187,31 @@ namespace IK_Intranet_App.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Users = new SelectList(_userManager.Users.ToList(), "Id", "AdSoyad", gorev.AppUserId);
+
+            // Hata Durumu: Listeyi tekrar (Filtreli olarak) doldur
+            var currentTeamId = _tenantService.GetTeamId();
+            var teamUsers = _userManager.Users.Where(u => u.TeamId == currentTeamId).ToList();
+            ViewBag.Users = new SelectList(teamUsers, "Id", "AdSoyad", gorev.AppUserId);
+
             return View(gorev);
         }
 
         // GET: Gorev/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var gorev = await _context.Gorevler
                 .Include(g => g.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (gorev == null)
-            {
-                return NotFound();
-            }
+            if (gorev == null) return NotFound();
 
             // YETKİ KONTROLÜ
             var currentUserId = _userManager.GetUserId(User);
             bool isAdmin = User.IsInRole("Admin");
             bool isOlusturan = gorev.OlusturanUserId == currentUserId;
 
-            if (!isAdmin && !isOlusturan) //Admin veya oluşturan değilse erişim engeli
+            if (!isAdmin && !isOlusturan)
             {
                 return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
             }
@@ -217,7 +231,7 @@ namespace IK_Intranet_App.Controllers
             bool isAdmin = User.IsInRole("Admin");
             bool isOlusturan = gorev.OlusturanUserId == currentUserId;
 
-            if (!isAdmin && !isOlusturan) //Admin veya oluşturan değilse erişim engeli
+            if (!isAdmin && !isOlusturan)
             {
                 return RedirectToAction("AccessDenied", "Account", new { area = "Identity" });
             }

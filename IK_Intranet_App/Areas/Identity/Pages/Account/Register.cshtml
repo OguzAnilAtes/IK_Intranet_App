@@ -4,7 +4,7 @@
     ViewData["Title"] = "Kayıt Ol";
 }
 
-<div class="container mt-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow-lg border-0 rounded-4">
@@ -12,14 +12,45 @@
 
                     <div class="text-center mb-4">
                         <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-                            <i class="bi bi-person-plus-fill fs-3"></i>
+                            <i class="bi bi-people-fill fs-3"></i>
                         </div>
                         <h2 class="fw-bold text-dark">Aramıza Katılın</h2>
-                        <p class="text-muted">Personel takip sistemine erişim için hesap oluşturun.</p>
+                        <p class="text-muted">Ekip yönetimi için hesabınızı oluşturun.</p>
                     </div>
 
                     <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="Input.RegistrationType" id="RegistrationTypeInput" value="CreateTeam" />
+
+                        <div class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill" role="tablist">
+                            <button class="nav-link active rounded-pill fw-bold" id="tab-create" type="button" onclick="switchTab('CreateTeam')">
+                                <i class="bi bi-building-add me-2"></i>Takım Oluştur
+                            </button>
+                            <button class="nav-link rounded-pill fw-bold" id="tab-join" type="button" onclick="switchTab('JoinTeam')">
+                                <i class="bi bi-ticket-perforated me-2"></i>Takıma Katıl
+                            </button>
+                        </div>
+
+                        <div id="create-team-area">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.TeamName" class="form-control rounded-3 border-primary" placeholder="Takım Adı" />
+                                <label asp-for="Input.TeamName" class="text-primary fw-bold"><i class="bi bi-building me-2"></i>Takım / Şirket Adı</label>
+                                <span asp-validation-for="Input.TeamName" class="text-danger small"></span>
+                                <div class="form-text small text-muted ms-1">Yönetici olacağınız yeni bir çalışma alanı kurar.</div>
+                            </div>
+                        </div>
+
+                        <div id="join-team-area" class="d-none">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.InviteCode" class="form-control rounded-3 border-success" placeholder="Davet Kodu" />
+                                <label asp-for="Input.InviteCode" class="text-success fw-bold"><i class="bi bi-key me-2"></i>Davet Kodu</label>
+                                <span asp-validation-for="Input.InviteCode" class="text-danger small"></span>
+                                <div class="form-text small text-muted ms-1">Yöneticinizden aldığınız 8 haneli kodu giriniz.</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25">
 
                         <div class="form-floating mb-3">
                             <input asp-for="Input.AdSoyad" class="form-control rounded-3" placeholder="Ad Soyad" />
@@ -50,8 +81,8 @@
                         <span asp-validation-for="Input.Password" class="text-danger small d-block mb-2"></span>
                         <span asp-validation-for="Input.ConfirmPassword" class="text-danger small d-block mb-2"></span>
 
-                        <button id="registerSubmit" type="submit" class="w-100 btn btn-primary btn-lg rounded-pill fw-bold mt-3 hover-effect">
-                            <i class="bi bi-arrow-right-circle me-2"></i>Kayıt Ol
+                        <button id="registerSubmit" type="submit" class="w-100 btn btn-primary btn-lg rounded-pill fw-bold mt-3 hover-effect shadow-sm">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Hesabı Oluştur
                         </button>
                     </form>
 
@@ -67,4 +98,28 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function switchTab(type) {
+            // 1. Gizli input'u güncelle
+            document.getElementById('RegistrationTypeInput').value = type;
+
+            // 2. Alanları Göster/Gizle
+            if (type === 'CreateTeam') {
+                document.getElementById('create-team-area').classList.remove('d-none');
+                document.getElementById('join-team-area').classList.add('d-none');
+
+                // Buton Renklerini Ayarla
+                document.getElementById('tab-create').classList.add('active');
+                document.getElementById('tab-join').classList.remove('active');
+            } else {
+                document.getElementById('create-team-area').classList.add('d-none');
+                document.getElementById('join-team-area').classList.remove('d-none');
+
+                // Buton Renklerini Ayarla
+                document.getElementById('tab-create').classList.remove('active');
+                document.getElementById('tab-join').classList.add('active');
+            }
+        }
+    </script>
 }

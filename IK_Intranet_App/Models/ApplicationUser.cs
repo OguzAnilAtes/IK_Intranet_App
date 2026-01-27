@@ -10,5 +10,9 @@ namespace IK_Intranet_App.Models
         [Required]
         [MaxLength(50)]
         public string AdSoyad { get; set; } = string.Empty;
+
+        public int? TeamId { get; set; } // Hangi takıma ait? (Nullable yapıyoruz ki ilk başta hatasız oluşsun)
+
+        public Team Team { get; set; } // İlişki (Navigation Property)
     }
 }

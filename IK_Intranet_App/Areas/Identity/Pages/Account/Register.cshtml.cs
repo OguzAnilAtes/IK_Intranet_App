@@ -3,6 +3,7 @@
 #nullable disable
 
 using IK_Intranet_App.Models;
+using IK_Intranet_App.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -30,13 +32,15 @@ namespace IK_Intranet_App.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly AppDbContext _context;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            AppDbContext context)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +48,7 @@ namespace IK_Intranet_App.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
         /// <summary>
@@ -101,6 +106,15 @@ namespace IK_Intranet_App.Areas.Identity.Pages.Account
             [Display(Name = "Şifre Tekrar")]
             [Compare("Password", ErrorMessage = "Girdiğiniz şifreler birbiriyle eşleşmiyor.")]
             public string ConfirmPassword { get; set; }
+
+            [Display(Name = "Kayıt Türü")]
+            public string RegistrationType { get; set; } = "CreateTeam"; // Varsayılan: Takım Oluştur
+
+            [Display(Name = "Takım Adı")]
+            public string TeamName { get; set; } // Sadece yeni takım kuracaksa dolu gelir
+
+            [Display(Name = "Davet Kodu")]
+            public string InviteCode { get; set; } // Sadece katılacaksa dolu gelir
         }
 
 
@@ -122,11 +136,73 @@ namespace IK_Intranet_App.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+                Team teamToJoin = null;
+
+                if (Input.RegistrationType == "CreateTeam")
+                {
+                    // 1. Seçenek: YENİ TAKIM OLUŞTURMA
+                    if (string.IsNullOrWhiteSpace(Input.TeamName))
+                    {
+                        ModelState.AddModelError("Input.TeamName", "Lütfen bir takım adı giriniz.");
+                        return Page();
+                    }
+
+                    // Rastgele 8 haneli davet kodu (Örn: A9B2X8Z1)
+                    string generatedInviteCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+
+                    teamToJoin = new Team
+                    {
+                        Name = Input.TeamName,
+                        InviteCode = generatedInviteCode,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    // Takımı veritabanına ekle
+                    _context.Teams.Add(teamToJoin);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    // 2. Seçenek: MEVCUT TAKIMA KATILMA
+                    if (string.IsNullOrWhiteSpace(Input.InviteCode))
+                    {
+                        ModelState.AddModelError("Input.InviteCode", "Lütfen bir davet kodu giriniz.");
+                        return Page();
+                    }
+
+                    // Koda sahip takımı bul
+                    teamToJoin = await _context.Teams.FirstOrDefaultAsync(t => t.InviteCode == Input.InviteCode);
+
+                    if (teamToJoin == null)
+                    {
+                        ModelState.AddModelError("Input.InviteCode", "Geçersiz davet kodu! Lütfen kontrol ediniz.");
+                        return Page();
+                    }
+                }
+
+                // Bulunan veya yeni oluşturulan takımın ID'sini kullanıcıya ata
+                user.TeamId = teamToJoin.Id;
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    // ROL ATAMA MANTIĞI
+                    if (Input.RegistrationType == "CreateTeam")
+                    {
+                        // Takımı kuran kişi -> Admin
+                        await _userManager.AddToRoleAsync(user, "Admin");
+                        _logger.LogInformation("Kullanıcıya 'Admin' rolü atandı.");
+                    }
+                    else
+                    {
+                        // Takıma katılan kişi -> Member
+                        await _userManager.AddToRoleAsync(user, "Member");
+                        _logger.LogInformation("Kullanıcıya 'Member' rolü atandı.");
+                    }
+
+                    _logger.LogInformation("Kullanıcı oluşturuldu. Takım ID: {user.TeamId}, Takım Adı: {teamToJoin.Name}");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

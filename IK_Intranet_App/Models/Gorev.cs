@@ -25,5 +25,9 @@ namespace IK_Intranet_App.Models
         public Durumlar Durum { get; set; } = Durumlar.Yapilacak; // Varsayılan: Yapılacak
 
         public DateTime OlusturmaTarihi { get; set; } = DateTime.UtcNow;
+
+        public int TeamId { get; set; } // Görev mutlaka bir takıma ait olmalı!
+
+        public Team Team { get; set; } // İlişki
     }
 }

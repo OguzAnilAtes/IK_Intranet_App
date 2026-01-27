@@ -1,7 +1,8 @@
 using IK_Intranet_App.Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using IK_Intranet_App.Models;
+using IK_Intranet_App.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 // PostgreSQL'in tarih saat konusundaki katı kuralını esnetir
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -23,6 +24,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders()
 .AddDefaultUI(); // Login/Register sayfalarının çalışması için şart
+
+// Standart ClaimsFactory yerine bizimkini kullan:
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, CustomUserClaimsPrincipalFactory>();
+
+// Kullanıcının kimliğine erişmek için gerekli (TenantService içinde kullandık)
+builder.Services.AddHttpContextAccessor();
+
+// Bizim yazdığımız Kiracı Servisi
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 // Razor Pages teknolojisini projeye tanıtıyoruz.
 builder.Services.AddRazorPages();
@@ -98,6 +108,22 @@ using (var scope = app.Services.CreateScope())
                 await userManager.AddToRoleAsync(newAdmin, "Admin");
             }
         }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Roller oluşturulurken bir hata meydana geldi.");
+    }
+}
+
+// Rol Seeding İşlemi
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // Az önce yazdığımız DbSeeder sınıfını çalıştırıyoruz
+        await DbSeeder.SeedRolesAndAdminAsync(services);
     }
     catch (Exception ex)
     {
