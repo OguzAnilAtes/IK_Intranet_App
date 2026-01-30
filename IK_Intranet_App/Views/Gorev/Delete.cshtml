@@ -1,7 +1,20 @@
 ﻿@model IK_Intranet_App.Models.Gorev
+@using IK_Intranet_App.Enums
 
 @{
     ViewData["Title"] = "Görevi Sil";
+
+    //Duruma göre renk belirleme
+    string badgeClass = "bg-secondary";
+
+    if (Model.Durum == Durumlar.Suruyor)
+    {
+        badgeClass = "bg-warning text-dark";
+    }
+    else if (Model.Durum == Durumlar.Tamamlandi)
+    {
+        badgeClass = "bg-success";
+    }
 }
 
 <div class="container mt-5">
@@ -30,7 +43,7 @@
 
                             <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Durum</dt>
                             <dd class="col-sm-8">
-                                <span class="badge bg-secondary">@Model.Durum</span>
+                                <span class="badge @badgeClass">@Model.Durum.GetDisplayName()</span>
                             </dd>
 
                             <dt class="col-sm-4 text-muted small text-uppercase fw-bold">Atanan Kişi</dt>

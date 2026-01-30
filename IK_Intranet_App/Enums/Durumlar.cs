@@ -1,9 +1,16 @@
-﻿namespace IK_Intranet_App.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IK_Intranet_App.Enums
 {
     public enum Durumlar
     {
-        Yapilacak = 0, // Başlangıç
-        Suruyor = 1,   // İşlemde
-        Tamamlandi = 2 // Bitti
+        [Display(Name = "Yapılacak")]
+        Yapilacak = 0,
+
+        [Display(Name = "Sürüyor")]
+        Suruyor = 1,
+
+        [Display(Name = "Tamamlandı")]
+        Tamamlandi = 2
     }
 }

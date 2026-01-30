@@ -30,8 +30,11 @@ namespace IK_Intranet_App.Controllers
         // GET: Gorev
         public async Task<IActionResult> Index()
         {
-            var gorevler = _context.Gorevler.Include(x => x.AppUser);
-            return View(await gorevler.ToListAsync());
+            var gorevler = await _context.Gorevler
+                             .Include(x => x.AppUser)
+                             .OrderByDescending(x => x.OlusturmaTarihi) // En yeniden en eskiye sırala
+                             .ToListAsync();
+            return View(gorevler);
         }
 
         // GET: Gorev/Details/5
@@ -248,6 +251,32 @@ namespace IK_Intranet_App.Controllers
         private bool GorevExists(int id)
         {
             return _context.Gorevler.Any(e => e.Id == id);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateDurum(int id, int durumId)
+        {
+            var gorev = await _context.Gorevler.FindAsync(id);
+            if (gorev == null) return Json(new { success = false, message = "Görev bulunamadı" });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // Yetki Kontrolü
+            bool yetkili = User.IsInRole("Admin") ||
+                           gorev.OlusturanUserId == currentUser.Id ||
+                           gorev.AppUserId == currentUser.Id;
+
+            if (!yetkili)
+            {
+                // Forbid() yerine JSON dönüyoruz. Böylece sistem login sayfasına yönlendirme yapmaz.
+                return Json(new { success = false, message = "Yetkiniz yok!" });
+            }
+
+            gorev.Durum = (IK_Intranet_App.Enums.Durumlar)durumId;
+            _context.Update(gorev);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Durum güncellendi" });
         }
     }
 }

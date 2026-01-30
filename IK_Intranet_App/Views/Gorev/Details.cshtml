@@ -1,7 +1,20 @@
 ﻿@model IK_Intranet_App.Models.Gorev
+@using IK_Intranet_App.Enums
 
 @{
     ViewData["Title"] = "Görev Detayları";
+
+    //Duruma göre renk belirleme
+    string badgeClass = "bg-secondary";
+
+    if (Model.Durum == Durumlar.Suruyor)
+    {
+        badgeClass = "bg-warning text-dark";
+    }
+    else if (Model.Durum == Durumlar.Tamamlandi)
+    {
+        badgeClass = "bg-success";
+    }
 }
 
 <div class="container mt-5">
@@ -17,8 +30,8 @@
                         <p class="text-muted small">Seçilen görevin tüm bilgileri aşağıdadır.</p>
                     </div>
                     <div>
-                        <span class="badge bg-primary fs-6 rounded-pill px-3 py-2">
-                            @Model.Durum
+                        <span class="badge @badgeClass fs-6 rounded-pill px-3 py-2 shadow-sm">
+                            @Model.Durum.GetDisplayName()
                         </span>
                     </div>
                 </div>

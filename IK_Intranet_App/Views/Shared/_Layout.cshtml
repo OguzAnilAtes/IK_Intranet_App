@@ -58,12 +58,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Team" asp-action="Index">Ekibim</a>
+                            <a class="nav-link" asp-area="" asp-controller="Team" asp-action="Index">Ekibim</a>
                         </li>
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Team" asp-action="Settings">Ayarlar</a>
+                                <a class="nav-link" asp-area="" asp-controller="Team" asp-action="Settings">Ayarlar</a>
                             </li>
                         }
                     </ul>

@@ -1,80 +1,82 @@
 ﻿@model IEnumerable<IK_Intranet_App.Models.Gorev>
 @using IK_Intranet_App.Enums
-@using Microsoft.AspNetCore.Identity
-@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Görev Panosu";
+
+    // --- SAYAÇLARI HESAPLA ---
+    var countYapilacak = Model.Count(x => x.Durum == Durumlar.Yapilacak);
+    var countSuruyor = Model.Count(x => x.Durum == Durumlar.Suruyor);
+    var countTamamlandi = Model.Count(x => x.Durum == Durumlar.Tamamlandi);
 }
 
+<style>
+    .hover-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        transition: 0.3s;
+        cursor: grab;
+    }
+
+    .hover-card:active {
+        cursor: grabbing;
+    }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background-color: #e9ecef;
+        border: 2px dashed #adb5bd;
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="display-6 fw-bold">🚀 Görev Panosu</h1>
-    <a asp-action="Create" class="btn btn-primary btn-lg">
+    <div class="d-flex align-items-center">
+        <h1 class="display-6 fw-bold mb-0">Görev Panosu</h1>
+
+        <a tabindex="0"
+           class="btn btn-sm text-muted ms-2 mt-2 opacity-75"
+           role="button"
+           data-bs-toggle="popover"
+           data-bs-trigger="hover focus"
+           data-bs-title="Yetki Kuralları"
+           data-bs-html="true"
+           data-bs-content="
+                <div class='small'>
+                    <div class='mb-2'>
+                        <span class='badge bg-warning text-dark me-1'>Yönetici</span>
+                        Her görevi düzenleyebilir, taşıyabilir ve silebilir.
+                    </div>
+                    <div>
+                        <span class='badge bg-primary me-1'>Üye</span>
+                        <ul class='mb-0 ps-3 mt-1'>
+                            <li><b>Düzenleme/Taşıma:</b> Kendi oluşturduğu veya kendisine atananlar.</li>
+                            <li><b>Silme:</b> Sadece kendi oluşturduğu görevler.</li>
+                        </ul>
+                    </div>
+                </div>
+           ">
+            <i class="bi bi-question-circle-fill fs-5"></i>
+        </a>
+    </div>
+
+    <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm">
         <i class="bi bi-plus-lg"></i> Yeni Görev
     </a>
 </div>
 
 <div class="row">
     <div class="col-md-4">
-        <div class="card bg-light mb-3">
-            <div class="card-header bg-secondary text-white fw-bold text-center">
-                YAPILACAKLAR
+        <div class="card bg-light mb-3 shadow-sm border-0">
+            <div class="card-header bg-secondary text-white fw-bold text-center d-flex justify-content-between align-items-center px-4">
+                <span>YAPILACAKLAR</span>
+                <span class="badge bg-white text-secondary rounded-pill">@countYapilacak</span>
             </div>
-            <div class="card-body" style="min-height: 500px; background-color: #f8f9fa;">
+
+            <div id="col-yapilacak" data-status="0" class="card-body sortable-list" style="min-height: 500px; background-color: #f8f9fa;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Yapilacak))
                 {
-                    // Döngünün içinde her kart için yetkileri hesapla
-                    var currentUserId = UserManager.GetUserId(User);
-                    var isAdmin = User.IsInRole("Admin");
-                    var isOlusturan = item.OlusturanUserId == currentUserId;
-                    var isAtanan = item.AppUserId == currentUserId;
-
-                    <div class="card mb-3 shadow-sm border-0 hover-card" style="border-radius: 10px; transition: transform 0.2s;">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-dark">@item.Baslik</h5>
-
-                            <p class="card-text text-muted small">@item.Aciklama</p>
-
-                            <hr class="my-2 opacity-25">
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                @if (item.AppUser != null)
-                                {
-                                    <span class="badge rounded-pill bg-light text-dark border">
-                                        <i class="bi bi-person-fill me-1"></i> @item.AppUser.AdSoyad
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-danger">Atanmamış</span>
-                                }
-
-                                <small class="text-muted" style="font-size: 0.75rem;">
-                                    @item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")
-                                </small>
-                            </div>
-
-                            <div class="mt-3 d-flex justify-content-end gap-2">
-
-                                @if (isAdmin || isOlusturan || isAtanan)
-                                {
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary" title="Düzenle">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                }
-
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-info" title="Detay">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-
-                                @if (isAdmin || isOlusturan)
-                                {
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light text-danger" title="Sil">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
-                                }
-                            </div>
-                        </div>
+                    <div data-task-id="@item.Id">
+                        <partial name="_GorevCardPartial" model="item" />
                     </div>
                 }
             </div>
@@ -82,65 +84,17 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card bg-light mb-3">
-            <div class="card-header bg-warning text-dark fw-bold text-center">
-                SÜRÜYOR
+        <div class="card bg-light mb-3 shadow-sm border-0">
+            <div class="card-header bg-warning text-dark fw-bold text-center d-flex justify-content-between align-items-center px-4">
+                <span>SÜRÜYOR</span>
+                <span class="badge bg-white text-dark rounded-pill bg-opacity-75">@countSuruyor</span>
             </div>
-            <div class="card-body" style="min-height: 500px; background-color: #fffbf0;">
+
+            <div id="col-suruyor" data-status="1" class="card-body sortable-list" style="min-height: 500px; background-color: #fffbf0;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Suruyor))
                 {
-                    // Döngünün içinde her kart için yetkileri hesapla
-                    var currentUserId = UserManager.GetUserId(User);
-                    var isAdmin = User.IsInRole("Admin");
-                    var isOlusturan = item.OlusturanUserId == currentUserId;
-                    var isAtanan = item.AppUserId == currentUserId;
-
-                    <div class="card mb-3 shadow-sm border-0 hover-card" style="border-radius: 10px; transition: transform 0.2s;">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-dark">@item.Baslik</h5>
-
-                            <p class="card-text text-muted small">@item.Aciklama</p>
-
-                            <hr class="my-2 opacity-25">
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                @if (item.AppUser != null)
-                                {
-                                    <span class="badge rounded-pill bg-light text-dark border">
-                                        <i class="bi bi-person-fill me-1"></i> @item.AppUser.AdSoyad
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-danger">Atanmamış</span>
-                                }
-
-                                <small class="text-muted" style="font-size: 0.75rem;">
-                                    @item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")
-                                </small>
-                            </div>
-
-                            <div class="mt-3 d-flex justify-content-end gap-2">
-
-                                @if (isAdmin || isOlusturan || isAtanan)
-                                {
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary" title="Düzenle">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                }
-
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-info" title="Detay">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-
-                                @if (isAdmin || isOlusturan)
-                                {
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light text-danger" title="Sil">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
-                                }
-                            </div>
-                        </div>
+                    <div data-task-id="@item.Id">
+                        <partial name="_GorevCardPartial" model="item" />
                     </div>
                 }
             </div>
@@ -148,68 +102,112 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card bg-light mb-3">
-            <div class="card-header bg-success text-white fw-bold text-center">
-                TAMAMLANDI
+        <div class="card bg-light mb-3 shadow-sm border-0">
+            <div class="card-header bg-success text-white fw-bold text-center d-flex justify-content-between align-items-center px-4">
+                <span>TAMAMLANDI</span>
+                <span class="badge bg-white text-success rounded-pill">@countTamamlandi</span>
             </div>
-            <div class="card-body" style="min-height: 500px; background-color: #f0fff4;">
+
+            <div id="col-tamamlandi" data-status="2" class="card-body sortable-list" style="min-height: 500px; background-color: #f0fff4;">
                 @foreach (var item in Model.Where(x => x.Durum == Durumlar.Tamamlandi))
                 {
-                    // Döngünün içinde her kart için yetkileri hesapla
-                    var currentUserId = UserManager.GetUserId(User);
-                    var isAdmin = User.IsInRole("Admin");
-                    var isOlusturan = item.OlusturanUserId == currentUserId;
-                    var isAtanan = item.AppUserId == currentUserId;
-
-                    <div class="card mb-3 shadow-sm border-0 hover-card" style="border-radius: 10px; transition: transform 0.2s;">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-dark">@item.Baslik</h5>
-
-                            <p class="card-text text-muted small">@item.Aciklama</p>
-
-                            <hr class="my-2 opacity-25">
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                @if (item.AppUser != null)
-                                {
-                                    <span class="badge rounded-pill bg-light text-dark border">
-                                        <i class="bi bi-person-fill me-1"></i> @item.AppUser.AdSoyad
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-danger">Atanmamış</span>
-                                }
-
-                                <small class="text-muted" style="font-size: 0.75rem;">
-                                    @item.OlusturmaTarihi.AddHours(3).ToString("dd.MM HH:mm")
-                                </small>
-                            </div>
-
-                            <div class="mt-3 d-flex justify-content-end gap-2">
-
-                                @if (isAdmin || isOlusturan || isAtanan)
-                                {
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary" title="Düzenle">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                }
-
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-info" title="Detay">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-
-                                @if (isAdmin || isOlusturan)
-                                {
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light text-danger" title="Sil">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
-                                }
-                            </div>
-                        </div>
+                    <div data-task-id="@item.Id">
+                        <partial name="_GorevCardPartial" model="item" />
                     </div>
                 }
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sortableLists = document.querySelectorAll('.sortable-list');
+
+            sortableLists.forEach(function (list) {
+                new Sortable(list, {
+                    group: 'kanban-board',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+
+                    onEnd: function (evt) {
+                        var itemEl = evt.item;
+                        var senderList = evt.from;
+                        var receiverList = evt.to;
+                        var oldIndex = evt.oldIndex;
+
+                        var taskId = itemEl.getAttribute('data-task-id');
+                        var newStatus = receiverList.getAttribute('data-status');
+
+                        // Aynı yere bırakıldıysa çık
+                        if (senderList === receiverList) return;
+
+                        // 1. Optimistic UI Güncellemesi
+                        updateCounters(senderList, receiverList);
+
+                        // 2. Sunucu İsteği
+                        fetch('/Gorev/UpdateDurum', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `id=${taskId}&durumId=${newStatus}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // BAŞARILI
+                                console.log("İşlem Başarılı:", data.message);
+                            } else {
+                                // BAŞARISIZ: Sessizce Geri Al
+                                console.warn("Yetkisiz İşlem - Geri alınıyor...");
+
+                                // ALERT SATIRI SİLİNDİ (Sessiz Mod) 🔇
+
+                                // DOM İşlemlerini Geri Al (Revert)
+                                setTimeout(() => {
+                                    // A. Kartı eski yerine koy
+                                    if (senderList.children.length === 0 || oldIndex >= senderList.children.length) {
+                                        senderList.appendChild(itemEl);
+                                    } else {
+                                        senderList.insertBefore(itemEl, senderList.children[oldIndex]);
+                                    }
+
+                                    // B. Sayaçları geri al
+                                    updateCounters(receiverList, senderList);
+                                }, 10);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Hata:', error);
+                            // Sadece sunucu hatası olursa uyaralım, bu önemli.
+                            alert("Bağlantı hatası oluştu, sayfa yenileniyor.");
+                            location.reload();
+                        });
+                    }
+                });
+            });
+        });
+
+        function updateCounters(fromList, toList) {
+            var fromBadge = fromList.closest('.card').querySelector('.badge');
+            var toBadge = toList.closest('.card').querySelector('.badge');
+
+            var fromCount = parseInt(fromBadge.innerText);
+            var toCount = parseInt(toBadge.innerText);
+
+            fromBadge.innerText = Math.max(0, fromCount - 1);
+            toBadge.innerText = toCount + 1;
+        }
+    </script>
+}
