@@ -64,8 +64,9 @@
     </a>
 </div>
 
-<div class="row">
-    <div class="col-md-4">
+<div id="kanban-scroll-container" class="row flex-nowrap overflow-x-auto pb-4" style="min-height: 75vh;">
+
+    <div class="col-10 col-md-4">
         <div class="card bg-light mb-3 shadow-sm border-0">
             <div class="card-header bg-secondary text-white fw-bold text-center d-flex justify-content-between align-items-center px-4">
                 <span>YAPILACAKLAR</span>
@@ -83,7 +84,7 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-10 col-md-4">
         <div class="card bg-light mb-3 shadow-sm border-0">
             <div class="card-header bg-warning text-dark fw-bold text-center d-flex justify-content-between align-items-center px-4">
                 <span>SÜRÜYOR</span>
@@ -101,7 +102,7 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-10 col-md-4">
         <div class="card bg-light mb-3 shadow-sm border-0">
             <div class="card-header bg-success text-white fw-bold text-center d-flex justify-content-between align-items-center px-4">
                 <span>TAMAMLANDI</span>
@@ -124,16 +125,92 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 
     <script>
+        // Popover ayarları
         document.addEventListener("DOMContentLoaded", function(){
             var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-                return new bootstrap.Popover(popoverTriggerEl);
-            });
+            popoverTriggerList.map(function (el) { return new bootstrap.Popover(el); });
         });
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
+            //Mobilde sütun genişliği ayarı
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @@media (max-width: 768px) {
+                    #kanban-scroll-container > .col-10,
+                    #kanban-scroll-container > .col-md-4 {
+                        flex: 0 0 75vw !important; /* Sen 75 yaptın, burayı güncelledim */
+                        max-width: 75vw !important;
+                        margin-right: 15px !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Global Autoscroll (yatay + dikey)
+            const scrollContainer = document.getElementById('kanban-scroll-container');
+            let autoScrollInterval = null;
+            let cursorX = 0;
+            let cursorY = 0;
+            const scrollZone = 50; // Kenara 50px kala motor çalışsın
+            const speed = 10;      // Kaydırma hızı
+
+            // Koordinat Takibi
+            const updateCursor = (x, y) => { cursorX = x; cursorY = y; };
+
+            // Mouse Dinleyici
+            document.addEventListener('dragover', e => {
+                updateCursor(e.clientX, e.clientY);
+                checkAutoScroll();
+            }, { passive: false });
+
+            // Touch Dinleyici
+            document.addEventListener('touchmove', e => {
+                if(e.touches[0]) {
+                    updateCursor(e.touches[0].clientX, e.touches[0].clientY);
+                    if (document.querySelector('.sortable-ghost')) {
+                        checkAutoScroll();
+                    }
+                }
+            }, { passive: false });
+
+            // Durdurucular
+            const stopScroll = () => {
+                if (autoScrollInterval) {
+                    clearInterval(autoScrollInterval);
+                    autoScrollInterval = null;
+                }
+            };
+            document.addEventListener('dragend', stopScroll);
+            document.addEventListener('mouseup', stopScroll);
+            document.addEventListener('touchend', stopScroll);
+
+            function checkAutoScroll() {
+                if (autoScrollInterval) return;
+
+                autoScrollInterval = setInterval(() => {
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+
+                    if (cursorX > screenW - scrollZone) {
+                        scrollContainer.scrollLeft += speed;
+                    } else if (cursorX < scrollZone) {
+                        scrollContainer.scrollLeft -= speed;
+                    }
+
+                    if (cursorY > screenH - scrollZone) {
+                        window.scrollBy(0, speed);
+                    }
+                    else if (cursorY < scrollZone) {
+                        window.scrollBy(0, -speed);
+                    }
+
+                }, 20);
+            }
+
+            // Sortable Kurulumu
             var sortableLists = document.querySelectorAll('.sortable-list');
 
             sortableLists.forEach(function (list) {
@@ -141,59 +218,43 @@
                     group: 'kanban-board',
                     animation: 150,
                     ghostClass: 'sortable-ghost',
+                    forceFallback: false,
+                    scroll: true,
+                    bubbleScroll: true,
 
                     onEnd: function (evt) {
+                        stopScroll();
+
                         var itemEl = evt.item;
                         var senderList = evt.from;
                         var receiverList = evt.to;
                         var oldIndex = evt.oldIndex;
-
                         var taskId = itemEl.getAttribute('data-task-id');
                         var newStatus = receiverList.getAttribute('data-status');
 
-                        // Aynı yere bırakıldıysa çık
                         if (senderList === receiverList) return;
 
-                        // 1. Optimistic UI Güncellemesi
                         updateCounters(senderList, receiverList);
 
-                        // 2. Sunucu İsteği
                         fetch('/Gorev/UpdateDurum', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: `id=${taskId}&durumId=${newStatus}`
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // BAŞARILI
-                                console.log("İşlem Başarılı:", data.message);
-                            } else {
-                                // BAŞARISIZ: Sessizce Geri Al
-                                console.warn("Yetkisiz İşlem - Geri alınıyor...");
-
-                                // ALERT SATIRI SİLİNDİ (Sessiz Mod) 🔇
-
-                                // DOM İşlemlerini Geri Al (Revert)
+                        .then(r => r.json())
+                        .then(d => {
+                            if (!d.success) {
                                 setTimeout(() => {
-                                    // A. Kartı eski yerine koy
                                     if (senderList.children.length === 0 || oldIndex >= senderList.children.length) {
                                         senderList.appendChild(itemEl);
                                     } else {
                                         senderList.insertBefore(itemEl, senderList.children[oldIndex]);
                                     }
-
-                                    // B. Sayaçları geri al
                                     updateCounters(receiverList, senderList);
                                 }, 10);
                             }
                         })
-                        .catch(error => {
-                            console.error('Hata:', error);
-                            // Sadece sunucu hatası olursa uyaralım, bu önemli.
-                            alert("Bağlantı hatası oluştu, sayfa yenileniyor.");
-                            location.reload();
-                        });
+                        .catch(e => location.reload());
                     }
                 });
             });
@@ -202,12 +263,8 @@
         function updateCounters(fromList, toList) {
             var fromBadge = fromList.closest('.card').querySelector('.badge');
             var toBadge = toList.closest('.card').querySelector('.badge');
-
-            var fromCount = parseInt(fromBadge.innerText);
-            var toCount = parseInt(toBadge.innerText);
-
-            fromBadge.innerText = Math.max(0, fromCount - 1);
-            toBadge.innerText = toCount + 1;
+            if(fromBadge) fromBadge.innerText = Math.max(0, parseInt(fromBadge.innerText) - 1);
+            if(toBadge) toBadge.innerText = parseInt(toBadge.innerText) + 1;
         }
     </script>
 }

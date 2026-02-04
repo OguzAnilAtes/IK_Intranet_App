@@ -1,27 +1,28 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+    /* Mobilde yatay taþmayý engellemek için kritik ayar */
+    overflow-x: hidden;
 }
 
-/* Kart Efektleri */
+/* --- EFEKTLER --- */
 .hover-up:hover {
     transform: translateY(-5px);
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
@@ -33,4 +34,96 @@ body {
 
 .ls-1 {
     letter-spacing: 1px;
+}
+
+/* --- TASARIM ÖGELERÝ --- */
+.navbar {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* --- KANBAN KARTLARI (Sürükleme Hissi) --- */
+.sortable-list .card {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: grab;
+}
+
+    .sortable-list .card:active {
+        cursor: grabbing;
+    }
+
+/* --- MOBÝL UYUMLULUK (RESPONSIVE) --- */
+@media (max-width: 576px) {
+
+    /* 1. Menü Linklerini Düzenle */
+    .nav-item {
+        margin-bottom: 5px;
+    }
+
+    /* 2. Menüdeki Butonlarý Geniþlet */
+    .navbar-nav .btn {
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    /* 3. Kanban Tahtasý Düzeltmesi */
+    #kanban-scroll-container {
+        margin-left: -12px; /* Bootstrap container boþluðunu nötrle */
+        margin-right: -12px; /* Sað tarafý da aç */
+        padding-right: 15px; /* Son kartýn saðýnda biraz boþluk býrak */
+        width: auto; /* Geniþliði serbest býrak */
+    }
+}
+
+/* --- SADECE MOBÝL CÝHAZLAR (768px altý) --- */
+@media (max-width: 768px) {
+
+    /* 1. KANBAN KUTUSU: Yan yana diz ve kaydýrmayý aç */
+    #kanban-scroll-container {
+        display: flex; /* Esnek kutu yap */
+        flex-wrap: nowrap; /* Asla alt satýra geçme (Yan yana zorla) */
+        overflow-x: auto; /* Saða sola kaydýrmaya izin ver */
+        /* Kenarlara yapýþmayý önle */
+        padding-left: 15px;
+        padding-right: 15px;
+        /* Bootstrap'in negatif marginlerini düzelt */
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+        /* 2. SÜTUNLAR: Geniþliði sabitle */
+        /* Mobilde normalde %100 olur, biz %75 yapýyoruz ki yanýndaki kartýn ucu görünsün */
+        #kanban-scroll-container > .col-10,
+        #kanban-scroll-container > .col-md-4 {
+            flex: 0 0 75vw; /* Ekranýn %75'i geniþlik */
+            max-width: 75vw;
+            margin-right: 15px; /* Sütunlar arasý boþluk */
+            display: block; /* Görünür yap */
+        }
+
+        /* Scrollbar'ý gizle (Daha temiz görünüm) */
+        #kanban-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
 }

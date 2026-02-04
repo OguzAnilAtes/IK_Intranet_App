@@ -1,34 +1,13 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        /* Tüm siteye fontu uygula */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa; /* Hafif gri arka plan (Gözü yormaz) */
-        }
-        .navbar {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Kurumsal Mavi Degrade */
-        }
-        .btn {
-            border-radius: 8px; /* Butonları biraz yuvarlayalım */
-        }
-        .card {
-            border: none; /* Kalın siyah çizgileri kaldıralım */
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Hafif gölge */
-        }
-        .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-            cursor: pointer;
-        }
-    </style>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - IK_Intranet_App</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/IK_Intranet_App.styles.css" asp-append-version="true" />
@@ -36,7 +15,7 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark border-bottom box-shadow mb-3">
-            <div class="container-fluid">
+            <div class="container">
                 <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-building-check me-2"></i>IK Yönetim
                 </a>
@@ -47,26 +26,32 @@
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
-                        </li>    
-                        <partial name="_LoginPartial" />
-                        <li class="nav-item ms-auto">
-                            <a class="nav-link btn btn-light text-primary px-3 ms-2 fw-bold" asp-area="" asp-controller="Gorev" asp-action="Index">
-                                <i class="bi bi-kanban me-1"></i> Görev Panosu
-                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Team" asp-action="Index">Ekibim</a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="Team" asp-action="Index">Ekibim</a>
                         </li>
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Team" asp-action="Settings">Ayarlar</a>
+                                <a class="nav-link text-white" asp-area="" asp-controller="Team" asp-action="Settings">Ayarlar</a>
                             </li>
                         }
                     </ul>
+
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item me-3">
+                            <a class="nav-link btn btn-light text-primary px-3 fw-bold shadow-sm" asp-area="" asp-controller="Gorev" asp-action="Index">
+                                <i class="bi bi-kanban me-1"></i> Görev Panosu
+                            </a>
+                        </li>
+
+                        <partial name="_LoginPartial" />
+                    </ul>
+
                 </div>
             </div>
         </nav>

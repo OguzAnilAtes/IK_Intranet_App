@@ -31,7 +31,7 @@
         </div>
     }
 
-    <div class="card shadow-sm border-0 rounded-4">
+    <div class="card shadow-sm border-0 rounded-4 d-none d-md-block">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -47,7 +47,6 @@
                         @foreach (var user in Model)
                         {
                             var roleBadge = user.IsAdmin ? "bg-warning text-dark" : "bg-info text-white";
-
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
@@ -63,7 +62,6 @@
                                 <td><span class="text-muted">@user.Email</span></td>
                                 <td><span class="badge rounded-pill @roleBadge">@user.Role</span></td>
                                 <td class="pe-4 text-end">
-
                                     @if (User.IsInRole("Admin") && user.Id != currentUserId)
                                     {
                                         <div class="dropdown d-inline-block">
@@ -77,9 +75,7 @@
                                                         <form asp-action="ChangeRole" method="post">
                                                             <input type="hidden" name="userId" value="@user.Id" />
                                                             <input type="hidden" name="newRole" value="Member" />
-                                                            <button class="dropdown-item text-warning" type="submit">
-                                                                <i class="bi bi-arrow-down-circle me-2"></i>Üyeliğe Düşür
-                                                            </button>
+                                                            <button class="dropdown-item text-warning" type="submit"><i class="bi bi-arrow-down-circle me-2"></i>Üyeliğe Düşür</button>
                                                         </form>
                                                     </li>
                                                 }
@@ -89,18 +85,14 @@
                                                         <form asp-action="ChangeRole" method="post">
                                                             <input type="hidden" name="userId" value="@user.Id" />
                                                             <input type="hidden" name="newRole" value="Admin" />
-                                                            <button class="dropdown-item text-success" type="submit">
-                                                                <i class="bi bi-arrow-up-circle me-2"></i>Yönetici Yap
-                                                            </button>
+                                                            <button class="dropdown-item text-success" type="submit"><i class="bi bi-arrow-up-circle me-2"></i>Yönetici Yap</button>
                                                         </form>
                                                     </li>
                                                 }
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
                                                     <form asp-action="Kick" asp-route-userId="@user.Id" method="post" onsubmit="return confirm('Bu kullanıcıyı takımdan çıkarmak istediğinize emin misiniz?');">
-                                                        <button class="dropdown-item text-danger" type="submit">
-                                                            <i class="bi bi-person-x-fill me-2"></i>Takımdan Çıkar
-                                                        </button>
+                                                        <button class="dropdown-item text-danger" type="submit"><i class="bi bi-person-x-fill me-2"></i>Takımdan Çıkar</button>
                                                     </form>
                                                 </li>
                                             </ul>
@@ -117,5 +109,73 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    <div class="d-md-none">
+        @foreach (var user in Model)
+        {
+            var roleBadge = user.IsAdmin ? "bg-warning text-dark" : "bg-info text-white";
+
+            <div class="card shadow-sm border-0 rounded-4 mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                @user.AdSoyad.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem;">@user.AdSoyad</h6>
+                                <span class="badge rounded-pill @roleBadge mt-1">@user.Role</span>
+                            </div>
+                        </div>
+
+                        @if (User.IsInRole("Admin") && user.Id != currentUserId)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-light border btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu shadow border-0 dropdown-menu-end">
+                                    @if (user.IsAdmin)
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeRole" method="post">
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <input type="hidden" name="newRole" value="Member" />
+                                                <button class="dropdown-item text-warning" type="submit">Üyeliğe Düşür</button>
+                                            </form>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeRole" method="post">
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <input type="hidden" name="newRole" value="Admin" />
+                                                <button class="dropdown-item text-success" type="submit">Yönetici Yap</button>
+                                            </form>
+                                        </li>
+                                    }
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-action="Kick" asp-route-userId="@user.Id" method="post" onsubmit="return confirm('Silmek istediğine emin misin?');">
+                                            <button class="dropdown-item text-danger" type="submit">Takımdan Çıkar</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else if (user.Id == currentUserId)
+                        {
+                            <span class="badge bg-light text-muted border">Siz</span>
+                        }
+                    </div>
+
+                    <div class="text-muted small">
+                        <i class="bi bi-envelope me-2"></i>@user.Email
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

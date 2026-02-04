@@ -5,49 +5,60 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    string displayName = "";
+    string displayName = "Kullanıcı";
+    string initial = "K";
+
     if (SignInManager.IsSignedIn(User))
     {
-        // 1. Veritabanından giriş yapan kullanıcıyı çekiyoruz
         var user = await UserManager.GetUserAsync(User);
-
-        // 2. AdSoyad var mı diye bakıyoruz, yoksa (fallback) email adresini alıyoruz
         var fullText = user?.AdSoyad ?? User.Identity?.Name;
 
         if (!string.IsNullOrEmpty(fullText))
         {
-            var parts = fullText.Split(' ');  //Sadece ilk ismi alıyoruz
+            var parts = fullText.Split(' ');
             if (parts.Length > 0)
             {
-                displayName = parts[0];
+                displayName = parts[0]; // Sadece ilk isim (Örn: Anıl)
+                initial = displayName.Substring(0, 1).ToUpper(); // Baş harf (Örn: A)
             }
         }
     }
 }
 
-<ul class="navbar-nav">
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <li class="nav-item">
-            <a class="nav-link text-white fw-bold" asp-area="Identity" asp-page="/Account/Manage/Index" title="Profil Yönetimi">
-                <i class="bi bi-person-circle me-1"></i> Merhaba @displayName!
-            </a>
-        </li>
-        <li class="nav-item">
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn btn-link text-white-50" style="text-decoration: none;">
-                    <i class="bi bi-box-arrow-right"></i> Çıkış
-                </button>
-            </form>
-        </li>
-    }
-    else
-    {
-        <li class="nav-item">
-            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
-        </li>
-    }
-</ul>
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold me-2"
+                 style="width: 32px; height: 32px; font-size: 14px;">
+                @initial
+            </div>
+            <span class="fw-bold">Merhaba, @displayName</span>
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdown">
+            <li>
+                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                    <i class="bi bi-person-gear me-2 text-muted"></i>Profil Yönetimi
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Register">Kayıt Ol</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Giriş Yap</a>
+    </li>
+}
