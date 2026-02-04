@@ -135,13 +135,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            //Mobilde sütun genişliği ayarı
+            // --- 1. MOBİLDE SÜTUN GENİŞLİĞİ AYARI (%75) ---
             const style = document.createElement('style');
             style.innerHTML = `
                 @@media (max-width: 768px) {
                     #kanban-scroll-container > .col-10,
                     #kanban-scroll-container > .col-md-4 {
-                        flex: 0 0 75vw !important; /* Sen 75 yaptın, burayı güncelledim */
+                        flex: 0 0 75vw !important;
                         max-width: 75vw !important;
                         margin-right: 15px !important;
                     }
@@ -149,13 +149,21 @@
             `;
             document.head.appendChild(style);
 
-            // Global Autoscroll (yatay + dikey)
+            // --- 2. EVRENSEL AUTO-SCROLL MOTORU ---
             const scrollContainer = document.getElementById('kanban-scroll-container');
             let autoScrollInterval = null;
             let cursorX = 0;
             let cursorY = 0;
-            const scrollZone = 50; // Kenara 50px kala motor çalışsın
-            const speed = 10;      // Kaydırma hızı
+
+            // --- İYİLEŞTİRME BURADA ---
+            // Yatayda 50px kenar boşluğu yetiyor (Zaten çalışıyor)
+            const scrollZoneX = 50;
+
+            // Dikeyde (Aşağı/Yukarı) alanı genişletiyoruz.
+            // 150px yapıyoruz ki parmak en alta sıkışmadan motor devreye girsin.
+            const scrollZoneY = 150;
+
+            const speed = 10; // Hız
 
             // Koordinat Takibi
             const updateCursor = (x, y) => { cursorX = x; cursorY = y; };
@@ -194,23 +202,27 @@
                     const screenW = window.innerWidth;
                     const screenH = window.innerHeight;
 
-                    if (cursorX > screenW - scrollZone) {
+                    // --- YATAY KAYDIRMA (X Bölgesi Kullanılıyor) ---
+                    if (cursorX > screenW - scrollZoneX) {
                         scrollContainer.scrollLeft += speed;
-                    } else if (cursorX < scrollZone) {
+                    } else if (cursorX < scrollZoneX) {
                         scrollContainer.scrollLeft -= speed;
                     }
 
-                    if (cursorY > screenH - scrollZone) {
+                    // --- DİKEY KAYDIRMA (Y Bölgesi Kullanılıyor - Daha Geniş) ---
+                    // Ekranın altına 150px yaklaştıysan aşağı kaydır
+                    if (cursorY > screenH - scrollZoneY) {
                         window.scrollBy(0, speed);
                     }
-                    else if (cursorY < scrollZone) {
+                    // Ekranın üstüne 150px yaklaştıysan yukarı kaydır
+                    else if (cursorY < scrollZoneY) {
                         window.scrollBy(0, -speed);
                     }
 
                 }, 20);
             }
 
-            // Sortable Kurulumu
+            // --- 3. SORTABLE KURULUMU (Aynen Korundu) ---
             var sortableLists = document.querySelectorAll('.sortable-list');
 
             sortableLists.forEach(function (list) {
